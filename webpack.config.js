@@ -1,3 +1,4 @@
+var webpack = require('webpack');
 var FlowBabelWebpackPlugin = require('flow-babel-webpack-plugin');
 
 module.exports = {
@@ -33,11 +34,12 @@ module.exports = {
       },
       {
         test: /\.json?$/,
-        loader: 'json'
+        loader: 'json-loader'
       },
     ]
   },
   plugins: [
     new FlowBabelWebpackPlugin(),
+    new webpack.IgnorePlugin(/ajv/)
   ],
 }
