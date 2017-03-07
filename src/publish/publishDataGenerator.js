@@ -28,8 +28,12 @@ export default function generatePublishData(publishParams: Object) {
 
     // const relativePath : string = '../BAcon/publish/static';
     const relativePath : string = './static';
-    const staticPublishFilesDirectory: string = path.resolve(relativePath);
+    let staticPublishFilesDirectory: string = path.resolve(relativePath);
     console.log('staticPublishFilesDirectory: ', staticPublishFilesDirectory);
+
+    // TODO - HACK - HACK - HACK - FIX ME
+    staticPublishFilesDirectory = '/Users/tedshaffer/Documents/Projects/bapublisher/src/publish/static';
+    console.log('overwrite staticPublishFilesDirectory: ', staticPublishFilesDirectory);
 
     let publishAllFilesToCopy: { [fileName:string]: FileToPublish } = {};
 
