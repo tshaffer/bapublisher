@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config ./webpack.config.js --watch",
+    "build": "webpack --config ./webpack.config.js",
     "flow_check": "flow check || exit 0"
   },
   "author": "Ted Shaffer",
