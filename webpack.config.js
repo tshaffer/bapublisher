@@ -3,7 +3,7 @@ var FlowBabelWebpackPlugin = require('flow-babel-webpack-plugin');
 
 module.exports = {
 
-  entry: './src/index.js',
+  entry: './index.js',
   output: {
     publicPath: './build/',
     path: './build',
