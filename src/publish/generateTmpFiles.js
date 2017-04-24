@@ -38,31 +38,40 @@ function publishAutoSchedule(scheduledPresentations: Array<ScheduledPresentation
 
   return new Promise( (resolve, reject) => {
 
-    // TODO - publish all scheduled presentations
+    let scheduledPresentationsToPublish = [];
 
-    let scheduledPresentation = scheduledPresentations[0];
+    scheduledPresentations.forEach( (scheduledPresentation) => {
 
-    let presentationToSchedule = {};
-    presentationToSchedule.name = scheduledPresentation.presentationToSchedule.name;
-    presentationToSchedule.fileName = scheduledPresentation.presentationToSchedule.fileName;
-    presentationToSchedule.filePath = scheduledPresentation.presentationToSchedule.filePath;
-    scheduledPresentation.presentationToSchedule = presentationToSchedule;
+      let presentationToSchedule = {};
+      presentationToSchedule.name = scheduledPresentation.presentationToSchedule.name;
+      presentationToSchedule.fileName = scheduledPresentation.presentationToSchedule.fileName;
+      presentationToSchedule.filePath = scheduledPresentation.presentationToSchedule.filePath;
 
-    // format dates properly
-    let mDateTime = moment(scheduledPresentation.dateTime);
-    scheduledPresentation.dateTime = mDateTime.format('YYYY-MM-DDTHH:mm:ss');
+      let scheduledPresentationToPublish = scheduledPresentation;
+      scheduledPresentationToPublish.presentationToSchedule = presentationToSchedule;
 
-    mDateTime = moment(scheduledPresentation.recurrenceEndDate);
-    scheduledPresentation.recurrenceEndDate = mDateTime.format('YYYY-MM-DDTHH:mm:ss');
+      // format dates properly
+      let mDateTime = moment(scheduledPresentation.dateTime);
+      scheduledPresentationToPublish.dateTime = mDateTime.format('YYYY-MM-DDTHH:mm:ss');
+
+      mDateTime = moment(scheduledPresentation.recurrenceStartDate);
+      scheduledPresentationToPublish.recurrenceStartDate = mDateTime.format('YYYY-MM-DDTHH:mm:ss');
+
+      mDateTime = moment(scheduledPresentation.recurrenceEndDate);
+      scheduledPresentationToPublish.recurrenceEndDate = mDateTime.format('YYYY-MM-DDTHH:mm:ss');
+
+      scheduledPresentationsToPublish.push(scheduledPresentationToPublish);
+    });
 
     let autoschedule = {};
-    autoschedule.scheduledPresentation = scheduledPresentation;
+    autoschedule.scheduledPresentations = scheduledPresentationsToPublish;
 
     const autoScheduleStr = JSON.stringify(autoschedule, null, '\t');
     const autoScheduleFilePath = path.join(tmpDir, 'autoschedule.json');
     nodeWrappers.writeFile(autoScheduleFilePath, autoScheduleStr).then( () => {
       resolve( { autoScheduleFilePath} );
     }).catch( (err) => {
+      debugger;
       reject(err);
     });
   });

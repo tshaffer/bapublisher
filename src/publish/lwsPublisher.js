@@ -4,10 +4,10 @@ const fs = require('fs-extra');
 import * as nodeWrappers from './nodeWrappers';
 const path = require('path');
 
-const request = require('request');
+const StringDecoder = require('string_decoder').StringDecoder;
+const decoder = new StringDecoder('utf8');
 
-const js2xmlparser = require('js2xmlparser2');
-const xml2js = require('xml2js');
+const request = require('request');
 
 import {
   postProcessPublishFiles,
@@ -36,56 +36,6 @@ export default function lwsPublish(publishParams: Object, publishAllFilesToCopy:
 function writeStandaloneSyncSpecLinkEntry(relativeFilePath: string, hash: string) {
   return 'pool/' + relativeFilePath + 'sha1-' + hash;
 }
-
-// function buploadToBrightSign(ipAddress: string, tmpDir: string) {
-//
-//   return new Promise( (resolve, reject) => {
-//
-//     let queryString = '';
-//     // check limitStorageSpace
-//     queryString += '?limitStorageSpace=' + 'false';
-//
-//     // Invoke SpecifyCardSizeLimits
-//     // does the code need to wait for a response?
-//     const url = 'http://'.concat(ipAddress, ':8080/SpecifyCardSizeLimits', queryString);
-//     // TODO set username / password
-//
-//     http.get(url, (res) => {
-//       console.log(`Got response: ${res.statusCode}`);
-//       // consume response body
-//       res.resume();
-//
-//   // invoke PrepareForTransfer, providing filesToPublish.xml to BrightSign
-//       const hostname = ipAddress;
-//       let endpoint = '/PrepareForTransfer';
-//       // duplicate code
-//       const filesToPublishPath = path.join(tmpDir, 'filesToPublish.xml');
-//
-//       let promise = httpUploadFile(hostname, endpoint, filesToPublishPath, [], true);
-//       promise.then(rawFilesToCopy => {
-//         let filesToCopy = getFilesToCopy(rawFilesToCopy);
-//
-//   // upload the files to the BrightSign
-//         uploadFilesToBrightSign(filesToCopy).then( () => {
-//           console.log('all files uploaded to BrightSign');
-//
-//           endpoint = '/UploadSyncSpec';
-//           let filePath = path.join(tmpDir, 'new-local-sync.xml');
-//           httpUploadFile(hostname, endpoint, filePath).then( () => {
-//             resolve();
-//           });
-//         });
-//       }).catch((err) => {
-//         debugger;
-//         reject(err);
-//       });
-//     }).on('error', (err) => {
-//       console.log(`Got error: ${err.message}`);
-//       reject(err);
-//     });
-//   });
-// }
-//
 
 function uploadFileToBrightSign(hostname: string, filePath: string, fileName: string, sha1: string) {
 
@@ -141,18 +91,14 @@ function uploadToBrightSign(publishParams: Object, ipAddress: string, tmpDir: st
   return new Promise((resolve, reject) => {
 
     let queryString = '';
-    // check limitStorageSpace
     queryString += '?limitStorageSpace=' + 'false';
 
-    // Invoke SpecifyCardSizeLimits
     const url = 'http://'.concat(ipAddress, ':8080/SpecifyCardSizeLimits', queryString);
     // TODO set username / password
 
-    nodeWrappers.httpGet(url).then( (res) => {
+    nodeWrappers.httpGet(url).then( (_) => {
 
-      console.log('nodeWrappers.httpGet response: ', res.statusCode);
-
-      const filesToPublishPath = path.join(tmpDir, 'filesToPublish.xml');
+      const filesToPublishPath = path.join(tmpDir, 'filesToPublish.json');
 
       return httpUploadFile(ipAddress, '/PrepareForTransfer', filesToPublishPath, [], true);
 
@@ -165,7 +111,7 @@ function uploadToBrightSign(publishParams: Object, ipAddress: string, tmpDir: st
 
       console.log('all files uploaded to BrightSign, upload sync spec');
 
-      let filePath = path.join(tmpDir, 'new-local-sync.xml');
+      let filePath = path.join(tmpDir, 'new-local-sync.json');
       return httpUploadFile(ipAddress, '/UploadSyncSpec', filePath);
 
     }).then( () => {
@@ -179,14 +125,12 @@ function uploadToBrightSign(publishParams: Object, ipAddress: string, tmpDir: st
 
 function publishToTarget(publishParams: Object, publishAllFilesToCopy: { [fileName:string]: FileToPublish }) {
 
-  console.log('Enter lws publishToTarget');
-
   const tmpDir: string = publishParams.tmpDir;
   console.log('lwsPublisher - electron tmpDir: ', tmpDir);
 
   return new Promise( (resolve, reject) => {
 
-    writeLocalSyncSpec(publishParams, publishAllFilesToCopy, tmpDir, 'new-local-sync.xml').then( () => {
+    writeLocalSyncSpec(publishParams, publishAllFilesToCopy, tmpDir, 'new-local-sync.json').then( () => {
 
       writeListOfFilesForLWS(publishAllFilesToCopy, tmpDir).then(() => {
 
@@ -235,18 +179,129 @@ function writeListOfFilesForLWS(publishAllFilesToCopy: { [fileName:string]: File
 
     console.log('number of files:', listOfFiles.file.length);
 
-    const listOfFilesXml = js2xmlparser('files', listOfFiles);
-
-    // write to filesToPublish.xml in tmp dir
-    const filePath = path.join(tmpDir, 'filesToPublish.xml');
-    nodeWrappers.writeFile(filePath, listOfFilesXml).then(() => {
-      console.log('filesToPublish.xml successfully written');
+    const filePath = path.join(tmpDir, 'filesToPublish.json');
+    const listOfFilesStr = JSON.stringify(listOfFiles, null, '\t');
+    nodeWrappers.writeFile(filePath, listOfFilesStr).then(() => {
+      console.log('filesToPublish.json successfully written');
       resolve('ok');
     }).catch( (err) => {
       reject(err);
     });
   });
 }
+
+function toArrayBuffer(buf) {
+  var ab = new ArrayBuffer(buf.length);
+  var view = new Uint8Array(ab);
+  for (var i = 0; i < buf.length; ++i) {
+    view[i] = buf[i];
+  }
+  return ab;
+}
+
+function toBuffer(ab) {
+  let buf = new Buffer(ab.byteLength);
+  let view = new Uint8Array(ab);
+  for (let i = 0; i < buf.length; ++i) {
+    buf[i] = view[i];
+  }
+  return buf;
+}
+
+
+function httpUploadFile(hostname: string, endpoint: string , filePath: string,
+                        uploadHeaders:Array<any> = [], parseResponse: boolean = false) {
+
+  const useFetch = true;
+
+  if (useFetch) {
+    return httpUploadFileViaFetch(hostname, endpoint, filePath, uploadHeaders, parseResponse);
+  }
+  else {
+    return httpUploadFileViaRequest(hostname, endpoint, filePath, uploadHeaders, parseResponse);
+  }
+}
+
+
+function httpUploadFileViaFetch(hostname: string, endpoint: string , filePath: string,
+                        uploadHeaders:Array<any> = [], parseResponse: boolean = false) {
+  return new Promise( (resolve, reject) => {
+
+    let url = 'http://' + hostname + ':8080' + endpoint;
+
+    const fileName = path.basename(filePath);
+
+    const fileData : Buffer = fs.readFileSync(filePath);
+    const fileArrayBuffer : ArrayBuffer = toArrayBuffer(fileData);
+
+    let type : string = '';
+
+    switch (path.extname(fileName).toLowerCase()) {
+      case '.jpg': {
+        type = 'image/jpeg';
+        break;
+      }
+      case '.mp4': {
+        type = 'video/mp4';
+        break;
+      }
+      case '.json': {
+        type = 'text/json';
+        break;
+      }
+      case '.xml': {
+        type = 'text/xml';
+        break;
+      }
+      default: {
+        type = 'text/plain';
+      }
+    }
+
+    const fileBlob = new Blob(
+      [ fileArrayBuffer ],
+      {type}
+    );
+
+    const file = new File(
+      [fileBlob],
+      fileName
+    );
+
+    let headers = {  };
+    uploadHeaders.forEach((uploadHeader) => {
+      headers[uploadHeader.key] = uploadHeader.value;
+    });
+
+    let formData = new FormData();
+    formData.append('files', file);
+    fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData
+    }).then( (response) => {
+      let blobPromise = response.blob();
+      blobPromise.then((blobData) => {
+        let reader = new FileReader();
+        reader.addEventListener('loadend', function () {
+          const dataBuffer = toBuffer(reader.result);
+          if (!parseResponse) {
+            resolve();
+            return;
+          }
+
+          const fileStr : string = decoder.write(dataBuffer);
+          const file : Object = JSON.parse(fileStr);
+          resolve(file);
+        });
+        reader.readAsArrayBuffer(blobData);
+      });
+    }).catch( (err) => {
+      reject(err);
+    });
+  });
+}
+
 
 // https://www.npmjs.com/package/request#multipartform-data-multipart-form-uploads
 // BUT, see the following bugs
@@ -255,9 +310,8 @@ function writeListOfFilesForLWS(publishAllFilesToCopy: { [fileName:string]: File
 // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
 // http://stackoverflow.com/questions/36067767/how-do-i-upload-a-file-with-the-html5-js-fetch-api
 // https://developer.mozilla.org/en-US/docs/Web/API/FormData
-function httpUploadFile(hostname: string, endpoint: string , filePath: string,
-                        uploadHeaders:Array<any> = [], parseResponse: boolean = false) {
-
+function httpUploadFileViaRequest(hostname: string, endpoint: string , filePath: string,
+                                uploadHeaders:Array<any> = [], parseResponse: boolean = false) {
   return new Promise( (resolve, reject) => {
 
     let url = 'http://' + hostname + ':8080' + endpoint;
@@ -293,19 +347,9 @@ function httpUploadFile(hostname: string, endpoint: string , filePath: string,
           resolve();
         }
         else {
-          let parser = new xml2js.Parser();
-          try {
-            parser.parseString(body, (err, jsonResponse) => {
-              if (err) {
-                reject(err);
-                return;
-              }
-              resolve(jsonResponse);
-            });
-          }
-          catch (e) {
-            reject(e);
-          }
+          // TODO - rewrite me as needed to parse the response
+          // TODO - and return it
+          console.log(body);
         }
       })
       .on('response', (response) => {
@@ -323,15 +367,16 @@ function getFilesToCopy(rawFilesToCopy: any) {
 
   let filesToCopy = [];
 
-  if (rawFilesToCopy && rawFilesToCopy.filesToCopy && rawFilesToCopy.filesToCopy.file) {
-    rawFilesToCopy.filesToCopy.file.forEach(file => {
-      const fileName = file.fileName[0];
-      const hashValue = file.hashValue[0];
-      const fileSize = file.fileSize[0];
+  if (rawFilesToCopy && rawFilesToCopy.file) {
+    rawFilesToCopy.file.forEach(file => {
+      const fileName = file.fileName;
+      const hashValue = file.hashValue;
+      const fileSize = file.fileSize;
+      const filePath = file.filePath;
 
       // TODO - this needs straightening out
       // TODO - ?addToSyncSpec; groupName? copyToRootFolder?
-      const fileToPublish = new FileToPublish(fileName, file.filePath[0], true, hashValue, fileSize);
+      const fileToPublish = new FileToPublish(fileName, filePath, true, hashValue, fileSize);
       filesToCopy.push(fileToPublish);
     });
   }

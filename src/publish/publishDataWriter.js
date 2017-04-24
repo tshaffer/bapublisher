@@ -214,6 +214,11 @@ function getPoolFilePath(startDir: string, sha1: string, createDirectories: bool
         });
       }
       else {
+        let currentDir = path.join(startDir, folders[0]);
+        currentDir = path.join(currentDir, folders[1]);
+        folders.forEach(folderName => {
+          relativeFilePath = relativeFilePath + folderName + '/';
+        });
         resolve(relativeFilePath);
       }
     }
@@ -222,6 +227,28 @@ function getPoolFilePath(startDir: string, sha1: string, createDirectories: bool
       debugger;
     }
   });
+}
+
+function buildDeleteSection() {
+  let deleteSection = [];
+  deleteSection.push( {
+    'pattern': '*.brs'
+  });
+  deleteSection.push( {
+    'pattern': '*.rok'
+  });
+  deleteSection.push( {
+    'pattern': '*.bsfw'
+  });
+  return deleteSection;
+}
+
+function buildIgnoreSection() {
+  let ignoreSection = [];
+  ignoreSection.push( {
+    'pattern': '*'
+  });
+  return ignoreSection;
 }
 
 export function writeLocalSyncSpec(publishParams: Object, publishAllFilesToCopy: DictStringToFileToPublish,
@@ -240,15 +267,19 @@ export function writeLocalSyncSpec(publishParams: Object, publishAllFilesToCopy:
 
     buildSyncSpecFilesSection(publishParams, publishAllFilesToCopy).then( (files) => {
 
-      syncSpec.files = files;
+      syncSpec.files = {};
+      syncSpec.files.download = files;
+
+      syncSpec.files.ignore = buildIgnoreSection();
+      syncSpec.files.delete = buildDeleteSection();
+
+      syncSpec.name = 'Simple Networking';
 
       const filePath = path.join(publishFolder, fileName);
-
       const syncSpecStr = JSON.stringify(syncSpec, null, '\t');
       nodeWrappers.writeFile(filePath, syncSpecStr).then( () => {
         resolve('ok');
       });
-      // const deleteIgnore = buildDeleteIgnoreSection();
     }).catch( (err) => {
       debugger;
       reject(err);
@@ -266,16 +297,11 @@ function buildSyncSpecDownloadItem(fileName: string, fileToPublish: FileToPublis
 
     download.name = fileName;
 
-    let hashO = {};
-    const hashMethod =
-      {
-        'method': 'SHA1'
-      };
-    hashO['@'] = hashMethod;
-    hashO['#'] = hash;
-    download.hash = hashO;
-
     download.size = size;
+
+    download.hash = {};
+    download.hash.method = 'SHA1';
+    download.hash.hex = hash;
 
     getPoolFilePath('', hash, false).then( (relativeFilePath) => {
 
@@ -325,25 +351,6 @@ function buildSyncSpecFilesSection(publishParams: Object, publishAllFilesToCopy:
     });
   });
 }
-
-// function buildDeleteIgnoreSection(): string {
-//
-//   const newLine = '\r\n';
-//
-//   let deleteIgnore = '';
-//   deleteIgnore += '\t<delete>' + newLine;
-//   deleteIgnore += '\t\t\t<pattern>*.brs</pattern>' + newLine;
-//   deleteIgnore += '\t\t</delete>' + newLine;
-//   deleteIgnore += '\t\t<delete>' + newLine;
-//   deleteIgnore += '\t\t\t<pattern>*.bsfw</pattern>' + newLine;
-//   deleteIgnore += '\t\t</delete>' + newLine;
-//   deleteIgnore += '\t\t<ignore>' + newLine;
-//   deleteIgnore += '\t\t\t<pattern>*</pattern>' + newLine;
-//   deleteIgnore += '\t\t</ignore>' + newLine;
-//   deleteIgnore += '\t</files>';
-//
-//   return deleteIgnore;
-// }
 
 // returns Promises[]
 export function prepareTargetForPublish(targetFolder: string) {

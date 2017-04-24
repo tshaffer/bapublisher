@@ -21,7 +21,7 @@ export default function sfnPublish(publishParams: Object, publishAllFilesToCopy:
 
     let promises = prepareTargetForPublish(targetFolder);
     Promise.all(promises).then( () => {
-      publishToTarget(publishParams, publishAllFilesToCopy, 'current-sync.xml').then( () => {
+      publishToTarget(publishParams, publishAllFilesToCopy, 'current-sync.json').then( () => {
         resolve();
       }).catch( (err) => {
         reject(err);

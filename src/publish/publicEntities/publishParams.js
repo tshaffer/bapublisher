@@ -12,7 +12,7 @@ export default class PublishParams   {
   enableLogging: boolean;
   limitStorageSpace: boolean;
   enableSerialDebugging: boolean;
-  enableSystemDebugging: boolean;
+  enableSystemLogDebugging: boolean;
   obfuscatedPassphrase: string;
   usbUpdatePassword: string;
 
@@ -20,6 +20,12 @@ export default class PublishParams   {
   fwPublishData: { [family:string]: PublishFirmware };
 
   tmpDir: string;
+
+  progressCallback: ?Function;
+  lwsDeviceIPAddresses: Array<string>;
+  syncSpecClientParams: Object;
+  syncSpecServerParams: Object;
+  simpleNetworkingUrl : string;
 
   constructor() {
   }
