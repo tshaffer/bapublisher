@@ -26,7 +26,9 @@ export default function generatePublishData(publishParams: Object) {
     const tmpDir = publishParams.tmpDir;
     console.log('publishDataGenerator - electron tmpDir: ', tmpDir);
 
-    const relativePath : string = '../BAcon/publish/static';
+    // BACONTODO
+    // use __dirname or require.resolve to get the path to bapublisher
+    const relativePath : string = '../bapublisher/src/publish/static';
     const staticPublishFilesDirectory: string = path.resolve(relativePath);
 
     let publishAllFilesToCopy: { [fileName:string]: FileToPublish } = {};
