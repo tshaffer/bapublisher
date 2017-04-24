@@ -32030,7 +32030,7 @@ End Function
 Sub SetDataFileTypeFormat()
 
     globalAA = GetGlobalAA()
-    globalAA.usingJsonFiles = false
+    globalAA.usingJsonFiles = true
 
 ''    syncSpec = CreateObject("roSyncSpec")
 ''    if syncSpec.ReadFromFile("local-sync.json") or syncSpec.ReadFromFile("current-sync.json") then
@@ -33531,6 +33531,12 @@ Function ParseJsonTransition(transitionSpec As Object)
     transitionDescription.sourceMediaState = transitionSpec.sourceMediaState
     transitionDescription.targetMediaState = transitionSpec.targetMediaState
     transitionDescription.assignInputToUserVariable = transitionSpec.assignInputToUserVariable
+   	transitionDescription.assignWildcardToUserVariable = transitionSpec.assignWildcardToUserVariable
+    if transitionSpec.assignWildcardToUserVariable then
+		transitionDescription.variableToAssignFromWildcard = invalid
+        transitionDescription.variableToAssign$ = transitionSpec.variableToAssignFromWildcard
+    endif
+
     transitionDescription.targetMediaStateIsPreviousState = transitionSpec.targetMediaStateIsPreviousState
 
     transitionDescription.userEvent = {}
