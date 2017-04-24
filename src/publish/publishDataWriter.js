@@ -214,8 +214,6 @@ function getPoolFilePath(startDir: string, sha1: string, createDirectories: bool
         });
       }
       else {
-        let currentDir = path.join(startDir, folders[0]);
-        currentDir = path.join(currentDir, folders[1]);
         folders.forEach(folderName => {
           relativeFilePath = relativeFilePath + folderName + '/';
         });

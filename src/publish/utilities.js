@@ -3,6 +3,9 @@
 const crypto = require('crypto');
 const fs = require('fs-extra');
 
+const StringDecoder = require('string_decoder').StringDecoder;
+const decoder = new StringDecoder('utf8');
+
 import FileInfo from './entities/fileInfo';
 import * as nodeWrappers from './nodeWrappers';
 
@@ -48,7 +51,8 @@ export function downloadViaFetch(url: string, destinationFilePath: string) {
           let reader = new FileReader();
           reader.addEventListener('loadend', function() {
             const buf = toBuffer(reader.result);
-            nodeWrappers.writeFile(destinationFilePath, buf).then( () => {
+            const bufAsStr : string = decoder.write(buf);
+            nodeWrappers.writeFile(destinationFilePath, bufAsStr).then( () => {
               resolve();
             }).catch( (err) => {
               reject(err);
