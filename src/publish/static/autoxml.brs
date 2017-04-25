@@ -32224,7 +32224,7 @@ Sub ParseJsonAutoplay(BrightAuthor As Object, meta As Object)
     meta.forceResolution = BrightAuthor.meta.forceResolution
     meta.tenBitColorEnabled = BrightAuthor.meta.tenBitColorEnabled
     meta.videoConnector = BrightAuthor.meta.videoConnector
-    meta.monitorOrientation = BrightAuthor.meta.monitorOrientation
+    meta.monitorOrientation = lcase(BrightAuthor.meta.monitorOrientation)
     meta.timezone = ""
     meta.rssDownloadPeriodicValue% = 0
 
@@ -32246,7 +32246,7 @@ Sub ParseJsonAutoplay(BrightAuthor As Object, meta As Object)
     meta.backgroundScreenColor = GetColor(BrightAuthor.meta.backgroundScreenColor)
     meta.dontChangePresentationUntilMediaEndEventReceived = BrightAuthor.meta.delayScheduleChangeUntilMediaEndEvent
     meta.delayScheduleChangeUntilMediaEndEvent = BrightAuthor.meta.delayScheduleChangeUntilMediaEndEvent
-    meta.languageKey = BrightAuthor.meta.languageKey
+    meta.languageKey = BrightAuthor.meta.languageKey    'BACONTODO - check case'
 
     meta.bp900AConfigureAutomatically = BrightAuthor.meta.buttonPanels["bp900a"].configureAutomatically
     meta.bp900BConfigureAutomatically = BrightAuthor.meta.buttonPanels["bp900b"].configureAutomatically
@@ -32333,7 +32333,7 @@ Sub ParseJsonAutoplay(BrightAuthor As Object, meta As Object)
 
     meta.udpReceivePort = BrightAuthor.meta.udpReceiverPort
     meta.udpSendPort = BrightAuthor.meta.udpDestinationPort
-    meta.udpAddressType = BrightAuthor.meta.udpDestinationAddressType
+    meta.udpAddressType = BrightAuthor.meta.udpDestinationAddressType   'BACONTODO - check case'
 
     if meta.udpAddressType = "" then meta.udpAddressType = "IPAddress"
     meta.udpAddress = BrightAuthor.meta.udpDestinationAddress
@@ -32343,7 +32343,7 @@ Sub ParseJsonAutoplay(BrightAuthor As Object, meta As Object)
     meta.ptpDomain = 0
 
     meta.flipCoordinates = BrightAuthor.meta.flipCoordinates
-    meta.touchCursorDisplayMode$ = BrightAuthor.meta.touchCursorDisplayMode
+    meta.touchCursorDisplayMode$ = lcase(BrightAuthor.meta.touchCursorDisplayMode)
 
     meta.audioInSampleRate = 48000
 
@@ -32378,7 +32378,7 @@ Sub ParseJsonAutoplay(BrightAuthor As Object, meta As Object)
     meta.inactivityTimeout = BrightAuthor.meta.inactivityTimeout
     meta.inactivityTime = BrightAuthor.meta.inactivityTime
 
-    meta.graphicsZOrder = BrightAuthor.meta.graphicsZOrder
+    meta.graphicsZOrder = BrightAuthor.meta.graphicsZOrder  'BACONTODO - check case'
 
     meta.isMosaic = false
 
