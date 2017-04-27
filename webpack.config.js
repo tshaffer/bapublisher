@@ -5,9 +5,8 @@ module.exports = {
 
   entry: './index.js',
   output: {
-    publicPath: './build/',
-    path: './build',
-    filename: 'bundle.js'
+    path: __dirname + '/dist',
+    filename: 'bapublisher.js'
   },
   devtool: "source-map",
   watchOptions: {
