@@ -1,3 +1,4 @@
+var path = require('path');
 var webpack = require('webpack');
 var FlowBabelWebpackPlugin = require('flow-babel-webpack-plugin');
 
@@ -5,7 +6,8 @@ module.exports = {
 
   entry: './index.js',
   output: {
-    path: __dirname + '/dist',
+    publicPath: __dirname + '/dist/',
+    path: path.join(__dirname, './dist'),
     filename: 'bapublisher.js'
   },
   devtool: "source-map",

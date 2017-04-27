@@ -1,6 +1,6 @@
 {
   "name": "bapublisher",
-  "version": "0.0.3",
+  "version": "0.0.9",
   "description": "Module to publish BAcon generated files to a BrightSign",
   "main": "index.js",
   "scripts": {
